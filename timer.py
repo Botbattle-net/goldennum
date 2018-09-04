@@ -16,8 +16,8 @@ class MyThread(Thread):
         self.stopped = event
 
     def run(self):
-        while not self.stopped.wait(0.5):
-            print("my thread")
+        while not self.stopped.wait(60):
+            print("thread start")
             getAct(1)
             submitResult(1)
 
@@ -50,17 +50,18 @@ def getAct(roomid:int):
     listUser = []
     # users=[{"userName":"abc","userAct":[1,2]},{"userName":"er","userAct":[6,7]}]  #测试代码
 
+    # init
     for user in users:
         listUser.append(User(userName=user.get('userName'),userAct1=user.get("userAct")[0],userAct2=user.get("userAct")[1]))
     total = 0
     for user in listUser:
         total += user.userAct1
         total += user.userAct2
+
     goldNum = (total / len(listUser))*0.618
     close_num = 10000  # 最接近黄金数的数
-    closeUser = ""
     far_num = goldNum  # 离黄金数最远的
-    farUser = ""
+
     for user in listUser:
         if abs(user.userAct1 - goldNum) < abs(close_num - goldNum):
             close_num = user.userAct1
@@ -74,9 +75,10 @@ def getAct(roomid:int):
         if abs(user.userAct2 - goldNum) > abs(far_num - goldNum):
             far_num = user.userAct2
             farUser = user.userName
-    print(goldNum)
-    print(closeUser,close_num)
-    print(farUser,far_num)
+    # for test
+    # print(goldNum)
+    # print(closeUser,close_num)
+    # print(farUser,far_num)
 
     # if values.status_code == 200:
     #    print("success")
@@ -96,8 +98,7 @@ def submitResult (roomid: int):
 
     # print (data) # for test
 
-
-    # HAS NOT BEEN TESTED!!
+    # HAS NOT BEEN TESTED
     r = requests.post(url+"/submitResult/", params=requestData, data=data)
 
     # if r.status_code == 200:
