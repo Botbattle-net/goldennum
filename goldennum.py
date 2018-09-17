@@ -1,12 +1,12 @@
-import threading
-import requests
+# import threading
 from threading import Event
 from threading import Thread
 
-import sys, os
+import sys
+# import os
 import json
-# sys.path.append("..")
-# import secretkey
+
+import requests
 
 url = "http://127.0.0.1:8001/goldennum"
 closeUser = ""
@@ -27,8 +27,8 @@ class MyThread(Thread):
     def run(self):
         while not self.stopped.wait(sleeptime):
             print("\nThread start")
-            getAct(roomid)
-            submitResult(roomid)
+            getAct()
+            submitResult()
 
 
 class User:
@@ -41,7 +41,7 @@ class User:
         self.userAct1 = userAct1
         self.userAct2 = userAct2
 
-def getAct(roomid):
+def getAct():
     global goldNum
     global closeUser
     global farUser
@@ -53,7 +53,7 @@ def getAct(roomid):
     requestData = {"roomid":roomid, "key":secretKey}
     # print(requestData)
     # values = requests.get(url+"/getAct/",params=requestData)
-    res = requests.get(url+"/getAct/",params=requestData)
+    res = requests.get(url+"/getAct/", params=requestData)
     values = res.json()
     # print(values)
     userNum = values.get('userNum')
@@ -64,13 +64,19 @@ def getAct(roomid):
 
     # init
     for user in users:
-        listUser.append(User(userName=user.get('userName'),userAct1=user.get("userAct")[0],userAct2=user.get("userAct")[1]))
+        listUser.append(User(
+            userName=user.get('userName'),
+            userAct1=user.get("userAct")[0],
+            userAct2=user.get("userAct")[1]
+        ))
     total = 0
     for user in listUser:
         total += user.userAct1
         total += user.userAct2
-
-    goldNum = (total / (len(listUser) * 2))*0.618
+    if listUser:
+        goldNum = (total / (len(listUser) * 2))*0.618
+    else:
+        goldNum = 0
     close_num = 10000  # 最接近黄金数的数
     far_num = goldNum  # 离黄金数最远的
 
@@ -93,32 +99,31 @@ def getAct(roomid):
     # print(farUser,far_num)
 
     if res.status_code == 200:
-       print("GET success")
+        print("GET success")
 
 
-def submitResult (roomid):
-    #print('Hello Timer2!')
+def submitResult():
     requestData = {"roomid":roomid, "key":secretKey}
-    data = {"roundTime":sleeptime,"goldenNum": goldNum, "userNum": userNum, "users": []}
-    for user in listUser:
-        if user.userName == closeUser:
-            data.get("users").append( {"userName":user.userName,"userScore":userNum} )
-        elif user.userName == farUser:
-            data.get("users").append({"userName": user.userName, "userScore": -2})
-        else:
+    data = {"roundTime":sleeptime, "goldenNum": goldNum, "userNum": userNum, "users":[]}
+
+    if len(listUser) > 2:
+        for user in listUser:
+            if user.userName == closeUser:
+                data.get("users").append({"userName":user.userName, "userScore":userNum - 2})
+            elif user.userName == farUser:
+                data.get("users").append({"userName": user.userName, "userScore": -2})
+            else:
+                data.get("users").append({"userName": user.userName, "userScore": 0})
+    else:
+        for user in listUser:
             data.get("users").append({"userName": user.userName, "userScore": 0})
 
     data_json = json.dumps(data)
-    # data_json = data
-    # print(data_json)
-
-    # HAS NOT BEEN TESTED
     r = requests.post(url+"/submitResult/", params=requestData, data=data_json)
-
     if r.status_code == 200:
-       print("POST success")
+        print("POST success")
 
-    
+
 if __name__ == "__main__":
     stopFlag = Event()
     thread = MyThread(stopFlag)
