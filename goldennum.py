@@ -69,6 +69,8 @@ def getAct():
             userAct1=user.get("userAct")[0],
             userAct2=user.get("userAct")[1]
         ))
+        if user.get("userAct")[0] == 0 and user.get("userAct")[1] == 0:
+            real_user_num = real_user_num-1
     total = 0
     for user in listUser:
         total += user.userAct1
@@ -115,8 +117,11 @@ def submitResult():
             else:
                 data.get("users").append({"userName": user.userName, "userScore": 0})
     else:
-        for user in listUser:
-            data.get("users").append({"userName": user.userName, "userScore": 0})
+        if len(listUser) != 0:
+            for user in listUser:
+                data.get("users").append({"userName": user.userName, "userScore": 0})
+        else:
+            print("No User")
 
     data_json = json.dumps(data)
     r = requests.post(url+"/submitResult/", params=requestData, data=data_json)
